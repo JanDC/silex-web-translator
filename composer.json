@@ -34,8 +34,8 @@
     "symfony/config": "^2.7"
   },
   "autoload": {
-    "psr-0": {
-      "DC\\WebTranslator": "src/"
+    "psr-4": {
+      "WebTranslator\\": "src/"
     }
   }
 }
