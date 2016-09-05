@@ -1,16 +1,20 @@
 {
-  "name": "deanc/silex-web-translator",
+  "name": "jandc/silex-web-translator",
   "type": "library",
-  "description": "A boilerplate to get started with silex",
+  "description": "Fork of the silex web translator, in an attempt to make int compatible with bolt cms",
   "keywords": [
     "silex",
     "symfony",
     "translation",
     "php"
   ],
-  "homepage": "https://github.com/deanc/silex-web-translator",
+  "homepage": "https://github.com/JanDC/silex-web-translator",
   "license": "MIT",
   "authors": [
+    {
+      "name": "Jan Decavele",
+      "homepage": "http://epochdc.net"
+    },
     {
       "name": "Dean Clatworthy",
       "homepage": "https://deanclatworthy.com"
@@ -18,7 +22,7 @@
   ],
   "require": {
     "php": ">=5.4.0",
-    "silex/silex": "~1.3",
+    "silex/silex": "1.2.*",
     "symfony/security": "~2.7",
     "doctrine/dbal": "^2.5",
     "symfony/twig-bridge": "^2.7",
