@@ -1,6 +1,6 @@
 <?php
 
-namespace DC\WebTranslator\Utility;
+namespace WebTranslator\Utility;
 
 use Symfony\Component\Translation\MessageCatalogue;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace DC\WebTranslator\Controller;
+namespace WebTranslator\Controller;
 
 
 use DC\WebTranslator\Utility\TranslationHelper;

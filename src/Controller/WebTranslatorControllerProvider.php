@@ -1,6 +1,6 @@
 <?php
 
-namespace DC\WebTranslator\Controller;
+namespace WebTranslator\Controller;
 
 use Silex\Application;
 use Silex\ControllerProviderInterface;

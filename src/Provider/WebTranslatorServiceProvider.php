@@ -1,6 +1,6 @@
 <?php
 
-namespace DC\WebTranslator\Provider;
+namespace WebTranslator\Provider;
 
 use Silex\Application;
 use Silex\ServiceProviderInterface;

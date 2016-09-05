@@ -1,6 +1,6 @@
 <?php
 
-namespace DC\WebTranslator\Task;
+namespace WebTranslator\Task;
 
 use Symfony\Component\Console\Command\Command;
 
