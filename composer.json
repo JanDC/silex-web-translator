@@ -1,7 +1,7 @@
 {
   "name": "jandc/silex-web-translator",
   "type": "library",
-  "description": "Fork of the silex web translator, in an attempt to make int compatible with bolt cms",
+  "description": "Fork of the silex web translator, in an attempt to make it compatible with bolt cms",
   "keywords": [
     "silex",
     "symfony",
