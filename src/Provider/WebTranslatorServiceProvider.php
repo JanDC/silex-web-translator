@@ -4,19 +4,17 @@ namespace WebTranslator\Provider;
 
 use Silex\Application;
 use Silex\ServiceProviderInterface;
+use WebTranslator\Controller\WebTranslatorController;
 
 class WebTranslatorServiceProvider implements ServiceProviderInterface
 {
-
     public function register(Application $app)
     {
         $app['webtranslator.controller'] = $app->share(function ($app) {
-            $controller = new \DC\WebTranslator\Controller\WebTranslatorController();
+            $controller = new WebTranslatorController();
             return $controller;
         });
-
     }
-
 
     public function boot(Application $app)
     {

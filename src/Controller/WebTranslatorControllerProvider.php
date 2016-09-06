@@ -3,6 +3,7 @@
 namespace WebTranslator\Controller;
 
 use Silex\Application;
+use Silex\ControllerCollection;
 use Silex\ControllerProviderInterface;
 use Silex\ServiceControllerResolver;
 

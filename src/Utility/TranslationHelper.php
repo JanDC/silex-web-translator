@@ -2,11 +2,12 @@
 
 namespace WebTranslator\Utility;
 
+use Silex\Translator;
 use Symfony\Component\Translation\MessageCatalogue;
 
 class TranslationHelper {
 
-    public static function getRealCatalogueSize($primaryLocale, \Silex\Translator $translator) {
+    public static function getRealCatalogueSize($primaryLocale, Translator $translator) {
 
         $primaryCatalogue = $translator->getCatalogue($primaryLocale);
 
@@ -17,7 +18,7 @@ class TranslationHelper {
         return $size;
     }
 
-    public static function getTotalUntranslated($primaryLocale, \Silex\Translator $translator) {
+    public static function getTotalUntranslated($primaryLocale, Translator $translator) {
 
 
         $untranslated = 0;
@@ -40,13 +41,12 @@ class TranslationHelper {
                     }
                 }
             }
-
         }
 
         return $untranslated;
     }
 
-    public static function compareTotalTranslations(\Silex\Translator $translator, $locale1, $locale2) {
+    public static function compareTotalTranslations(Translator $translator, $locale1, $locale2) {
 
         $catalogue1 = $translator->getCatalogue($locale1)->all();
         $catalogue2 = $translator->getCatalogue($locale2)->all();
@@ -63,5 +63,4 @@ class TranslationHelper {
 
         return $size1 - $size2;
     }
-
 }
