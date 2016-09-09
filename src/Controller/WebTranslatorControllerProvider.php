@@ -20,16 +20,12 @@ class WebTranslatorControllerProvider implements ControllerProviderInterface
         /** @var ControllerCollection $controllers */
         $controllers = $app['controllers_factory'];
 
-        $controllers->match('/importer', 'webtranslator.controller:importerAction')
-            ->method('GET|POST')
-            ->bind('webtranslator.importer');
-
         $controllers->get('/locales', 'webtranslator.controller:localesListAction')
             ->bind('webtranslator.locales.list');
 
-        $controllers->match('/list/{targetLocale}', 'webtranslator.controller:translationsListAction')
+        $controllers->match('/list/{page}', 'webtranslator.controller:translationsListAction')
             ->method('GET|POST')
-            ->value('targetLocale', '')
+            ->value('page', 1)
             ->bind('webtranslator.translations.list');
 
         $controllers->get('/', 'webtranslator.controller:indexAction')

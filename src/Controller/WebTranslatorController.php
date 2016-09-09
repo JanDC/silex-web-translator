@@ -4,38 +4,32 @@ namespace WebTranslator\Controller;
 
 
 use Silex\Application;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Translation\Dumper\YamlFileDumper;
-use Symfony\Component\Translation\Loader\ArrayLoader;
-use Symfony\Component\Translation\MessageCatalogue;
+use Symfony\Component\Translation\Translator;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Validator\Constraints as Assert;
 use WebTranslator\Utility\TranslationHelper;
+use Symfony\Component\Translation\Loader\YamlFileLoader as TranslationYamlFileLoader;
+
 
 class WebTranslatorController
 {
-    public function __construct()
-    {
-    }
-
     public function indexAction(Application $app, Request $request)
     {
-        $translator = $app['translator'];
+        $translator = $this->getTranslatorByOptions($app);
         $locale = $app['locale'];
+        $locales = $this->getLocaleList($app);
 
-        $locales = array_unique(array_merge(array($translator->getLocale()), $translator->getFallbackLocales()));
+        $totalTranslations = TranslationHelper::getRealCatalogueSize($locale, $translator);
+        $totalUntranslated = TranslationHelper::getTotalUntranslated($locale, $translator, $locales);
 
-        $totalTranslations = TranslationHelper::getRealCatalogueSize($app['locale'], $app['translator']);
-        $totalUntranslated = TranslationHelper::getTotalUntranslated($app['locale'], $app['translator']);
-
-        return $app['twig']->render('@webtranslator/index.twig', array(
-            'locale' => $locale
-        , 'locales' => $locales
-        , 'totalUntranslated' => $totalUntranslated
-        , 'totalTranslations' => $totalTranslations
-        ));
+        return $app['twig']->render('@webtranslator/index.twig', [
+            'locale' => $locale,
+            'locales' => $locales,
+            'totalUntranslated' => $totalUntranslated,
+            'totalTranslations' => $totalTranslations,
+        ]);
     }
 
     public function localesListAction(Application $app, Request $request)
@@ -43,7 +37,31 @@ class WebTranslatorController
         return $app['twig']->render('@webtranslator/locales/list.twig', array());
     }
 
-    public function translationsListAction(Application $app, Request $request, $targetLocale)
+    private function getTranslatorByOptions(Application $app)
+    {
+        if (isset($app['webtranslator.options']['library_resources'])) {
+
+            $translator = new Translator($app['locale']);
+
+            $translator->addLoader('yml', new TranslationYamlFileLoader());
+
+            foreach ($app['webtranslator.options']['library_resources'] as $resource) {
+                $translator->addResource($resource[0], $resource[1], $resource[2], $resource[3]);
+            }
+
+            return $translator;
+        }
+        return $app['translator'];
+    }
+
+    /**
+     * @param Application $app
+     * @param Request $request
+     * @param null|int $page
+     *
+     * @return RedirectResponse
+     */
+    public function translationsListAction(Application $app, Request $request, $page = 1)
     {
         $locale = $app['locale'];
 
@@ -51,27 +69,40 @@ class WebTranslatorController
             $locale = $targetLocale;
         }
 
-        $primaryCatalogue = $app['translator']->getCatalogue($app['locale'])->all();
-        $translatedCatalogue = $app['translator']->getCatalogue($locale)->all();
-
+        $translator = $this->getTranslatorByOptions($app);
+        $translatedCatalogues = [];
+        foreach ($this->getLocaleList($app) as $otherlocale) {
+            if ($otherlocale !== $locale) {
+                $translatedCatalogues[$otherlocale] = $translator->getCatalogue($otherlocale)->all();
+            }
+        }
+        $primaryCatalogue = $translator->getCatalogue($app['locale'])->all();
         if ($request->getMethod() == 'POST') {
-            $newTranslations = $request->get('translations')[$locale];
-            foreach ($newTranslations AS $domain => $translations) {
-                $domainTranslations = self::unflattenTranslationArray($translations);
-                $str = Yaml::dump($domainTranslations, 10, 4, false, false);
-                file_put_contents($app['webtranslator.options']['translator_file_path'] . $domain . '.' . $locale . '.yml', $str);
+            $translationForm = $request->get('translations');
+            foreach ($translationForm as $locale => $newTranslations) {
+                foreach ($newTranslations AS $domain => $translations) {
+                    $domainTranslations = self::unflattenTranslationArray($translations);
+                    $fullpath = $app['webtranslator.options']['translator_file_path'] . $domain . '.' . $locale . '.yml';
+
+                    if (file_exists($fullpath)) {
+                        $domainTranslations = array_merge(Yaml::parse(file_get_contents($fullpath)), $domainTranslations);
+                    }
+                    $str = Yaml::dump($domainTranslations, 10, 4, false, false);
+                    file_put_contents($fullpath, $str);
+                }
             }
 
-            return $app->redirect($app['url_generator']->generate('webtranslator.translations.list', array('targetLocale' => $locale)));
+            return $app->redirect($app['url_generator']->generate('webtranslator.translations.list', ['page' => $page]));
         }
 
-        return $app['twig']->render('@webtranslator/translations/list.twig', array(
-            'locale' => $locale
-        , 'primaryCatalogue' => $primaryCatalogue
-        , 'translatedCatalogue' => $translatedCatalogue
-        , 'locales' => array_unique(array_merge(array($app['translator']->getLocale()), $app['translator']->getFallbackLocales()))
-        , 'missingCount' => TranslationHelper::compareTotalTranslations($app['translator'], $app['locale'], $locale)
-        ));
+        return $app['twig']->render('@webtranslator/translations/list.twig', [
+            'primaryLocale' => $locale,
+            'primaryCatalogue' => $primaryCatalogue,
+            'translatedCatalogues' => $translatedCatalogues,
+            'locales' => $this->getLocaleList($app),
+            'missingCount' => TranslationHelper::compareTotalTranslations($translator, $app['locale'], $locale),
+            'page' => $page,
+        ]);
     }
 
     public function importerAction(Application $app, Request $request)
@@ -91,9 +122,9 @@ class WebTranslatorController
             ])
             ->getForm();
 
-        return $app['twig']->render('@webtranslator/importer.twig', array(
+        return $app['twig']->render('@webtranslator/importer.twig', [
             'form' => $form->createView()
-        ));
+        ]);
     }
 
     public static function unflattenTranslationArray($translationArray)
@@ -120,5 +151,19 @@ class WebTranslatorController
         } else {
             return self::flatten_yaml_key_value($arr, [$key => $inner]);
         }
+    }
+
+    private function getLocaleList(Application $app)
+    {
+        if (isset($app['webtranslator.options']['locales'])) {
+            return $app['webtranslator.options']['locales'];
+        }
+        return array_unique(array_merge(array($app['translator']->getLocale()), $app['translator']->getFallbackLocales()));
+    }
+
+    private function filterDuplicateEntriesFromYml($fullpath)
+    {
+        $parsed = Yaml::parse(file_get_contents($fullpath));
+        file_put_contents($fullpath, Yaml::dump($parsed));
     }
 }

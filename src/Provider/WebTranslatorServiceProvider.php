@@ -22,6 +22,5 @@ class WebTranslatorServiceProvider implements ServiceProviderInterface
         if (isset($app['twig.loader.filesystem'])) {
             $app['twig.loader.filesystem']->addPath(__DIR__ . '/../views/', 'webtranslator');
         }
-
     }
 }
