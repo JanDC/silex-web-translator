@@ -61,9 +61,13 @@ class WebTranslatorController
      *
      * @return RedirectResponse
      */
-    public function translationsListAction(Application $app, Request $request, $page = 1)
+    public function translationsListAction(Application $app, Request $request, $page = null)
     {
         $locale = $app['locale'];
+
+        if (!is_numeric($page)) {
+            return new RedirectResponse($app['url_generator']->generate('webtranslator.translations.list', ['page' => 1]));
+        }
 
         if (!empty($targetLocale)) {
             $locale = $targetLocale;

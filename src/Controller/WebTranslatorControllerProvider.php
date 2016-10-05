@@ -25,7 +25,7 @@ class WebTranslatorControllerProvider implements ControllerProviderInterface
 
         $controllers->match('/list/{page}', 'webtranslator.controller:translationsListAction')
             ->method('GET|POST')
-            ->value('page', 1)
+            ->value('page', null)
             ->bind('webtranslator.translations.list');
 
         $controllers->get('/', 'webtranslator.controller:indexAction')
