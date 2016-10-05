@@ -2,8 +2,7 @@
 
 namespace WebTranslator\Utility;
 
-use Silex\Translator;
-use Symfony\Component\Translation\MessageCatalogue;
+use Symfony\Component\Translation\Translator;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class TranslationHelper
