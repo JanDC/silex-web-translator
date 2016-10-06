@@ -72,7 +72,7 @@ class WebTranslatorController
      * @param Request $request
      * @param null|int $page
      *
-     * @return RedirectResponse|array
+     * @return RedirectResponse|array|bool
      */
     public function translationsListAction(Application $app, Request $request, $page = null)
     {
