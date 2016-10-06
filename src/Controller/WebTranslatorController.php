@@ -15,6 +15,22 @@ use Symfony\Component\Translation\Loader\YamlFileLoader as TranslationYamlFileLo
 
 class WebTranslatorController
 {
+    const MODE_FULL = 'full';
+    const MODE_API = 'api';
+
+    /** @var  string */
+    private $mode;
+
+    public function __construct($mode = self::MODE_FULL)
+    {
+        $this->setMode($mode);
+    }
+
+    private function isApi()
+    {
+        return $this->mode == self::MODE_API;
+    }
+
     public function indexAction(Application $app, Request $request)
     {
         $translator = $this->getTranslatorByOptions($app);
@@ -24,17 +40,14 @@ class WebTranslatorController
         $totalTranslations = TranslationHelper::getRealCatalogueSize($locale, $translator);
         $totalUntranslated = TranslationHelper::getTotalUntranslated($locale, $translator, $locales);
 
-        return $app['twig']->render('@webtranslator/index.twig', [
+        $context = [
             'locale' => $locale,
             'locales' => $locales,
             'totalUntranslated' => $totalUntranslated,
             'totalTranslations' => $totalTranslations,
-        ]);
-    }
+        ];
 
-    public function localesListAction(Application $app, Request $request)
-    {
-        return $app['twig']->render('@webtranslator/locales/list.twig', array());
+        return $this->isApi() ? $context : $app['twig']->render('@webtranslator/index.twig', $context);
     }
 
     private function getTranslatorByOptions(Application $app)
@@ -59,7 +72,7 @@ class WebTranslatorController
      * @param Request $request
      * @param null|int $page
      *
-     * @return RedirectResponse
+     * @return RedirectResponse|array
      */
     public function translationsListAction(Application $app, Request $request, $page = null)
     {
@@ -96,39 +109,19 @@ class WebTranslatorController
                 }
             }
 
-            return $app->redirect($app['url_generator']->generate('webtranslator.translations.list', ['page' => $page]));
+            $this->isApi() ? true : $app->redirect($app['url_generator']->generate('webtranslator.translations.list', ['page' => $page]));
         }
 
-        return $app['twig']->render('@webtranslator/translations/list.twig', [
+        $context = [
             'primaryLocale' => $locale,
             'primaryCatalogue' => $primaryCatalogue,
             'translatedCatalogues' => $translatedCatalogues,
             'locales' => $this->getLocaleList($app),
             'missingCount' => TranslationHelper::compareTotalTranslations($translator, $app['locale'], $locale),
             'page' => $page,
-        ]);
-    }
+        ];
 
-    public function importerAction(Application $app, Request $request)
-    {
-        $form = $app['form.factory']->createBuilder('form')
-            ->add('parsers', 'choice', [
-                'required' => false,
-                'expanded' => true,
-                'multiple' => true,
-                'label' => 'Import translations from:',
-                'constraints' => [new Assert\NotBlank()],
-                'choices' => [
-                    'php' => 'PHP files',
-                    'twig' => 'Twig templates'
-                ]
-                , 'data' => ['php', 'twig']
-            ])
-            ->getForm();
-
-        return $app['twig']->render('@webtranslator/importer.twig', [
-            'form' => $form->createView()
-        ]);
+        return $this->isApi() ? $context : $app['twig']->render('@webtranslator/translations/list.twig', $context);
     }
 
     public static function unflattenTranslationArray($translationArray)
@@ -165,9 +158,8 @@ class WebTranslatorController
         return array_unique(array_merge(array($app['translator']->getLocale()), $app['translator']->getFallbackLocales()));
     }
 
-    private function filterDuplicateEntriesFromYml($fullpath)
+    private function setMode($mode)
     {
-        $parsed = Yaml::parse(file_get_contents($fullpath));
-        file_put_contents($fullpath, Yaml::dump($parsed));
+        $this->mode = $mode;
     }
 }
