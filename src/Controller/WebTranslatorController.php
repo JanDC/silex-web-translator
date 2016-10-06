@@ -109,7 +109,7 @@ class WebTranslatorController
                 }
             }
 
-            $this->isApi() ? true : $app->redirect($app['url_generator']->generate('webtranslator.translations.list', ['page' => $page]));
+            return $this->isApi() ? true : $app->redirect($app['url_generator']->generate('webtranslator.translations.list', ['page' => $page]));
         }
 
         $context = [
