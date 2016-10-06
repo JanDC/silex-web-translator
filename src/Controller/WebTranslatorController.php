@@ -79,7 +79,7 @@ class WebTranslatorController
         $locale = $app['locale'];
 
         if (!is_numeric($page)) {
-            return new RedirectResponse($app['url_generator']->generate('webtranslator.translations.list', ['page' => 1]));
+            return $this->translationsListAction($app, $request, 1);
         }
 
         if (!empty($targetLocale)) {
